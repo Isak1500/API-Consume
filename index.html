@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <title>API Consumption</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container">
+            <h2>Compare two countries</h2>
+            <div class="form-inline">
+                <label  class="mb-2 mr-sm-2">First:</label>
+                <input type="text" class="form-control mb-2 mr-sm-2" id="first-country" placeholder="Enter country name">
+                <label for="second_country" class="mb-2 mr-sm-2">Second:</label>
+                <input type="text" class="form-control mb-2 mr-sm-2" id="second-country" placeholder="Enter country name">
+               
+                <button type="submit" class="btn btn-primary mb-2" id="compare">Compare</button>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+        <script type="text/javascript">
+            var btn = document.getElementById("compare");
+            var first = document.getElementById("first-country");
+            var second = document.getElementById("second-country");            
+    
+            var myHeaders = new Headers();
+            myHeaders.append("x-rapidapi-host", "restcountries-v1.p.rapidapi.com");
+            myHeaders.append("x-rapidapi-key", "393ab9f123msh615c13012e31088p14b6ffjsn65b9dfc344b1");
+            myHeaders.append("useQueryString", "true");
+    
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow'
+            };
+    
+            var base_url = "https://restcountries-v1.p.rapidapi.com/name/";
+
+            btn.addEventListener("click", function(){
+                var country_one = base_url.concat(first.value);
+                var country_two = base_url.concat(second.value);
+
+                fetch(country_one, requestOptions)
+                .then(response => response.text())
+                .then(result => {                    
+                    fetch(country_two, requestOptions)
+                    .then(response2 => response2.text())
+                    .then(result2 => {
+                        var country1 = JSON.parse(result)[0];
+                        var country2 = JSON.parse(result2)[0];
+                        saveFile(country1, country2);                        
+                    })
+                    .catch(error => {
+                        alert('Something went wrong, check the entries and try again');
+                    });
+                })
+                .catch(error => {
+                    alert('Something went wrong, check the entries and try again');
+                });               
+            })
+            let saveFile = (country1, country2) => {    	
+                const currency1 = country1.currencies[0];
+                const currency2 = country2.currencies[0];                
+
+                var currencyHeaders = new Headers();
+                currencyHeaders.append("x-rapidapi-host", "currency-exchange.p.rapidapi.com");
+                currencyHeaders.append("x-rapidapi-key", "393ab9f123msh615c13012e31088p14b6ffjsn65b9dfc344b1");
+                currencyHeaders.append("useQueryString", "true");
+        
+                var requestOptions2 = {
+                    method: 'GET',
+                    headers: currencyHeaders,
+                    redirect: 'follow'
+                };
+
+                const currency_url = "https://currency-exchange.p.rapidapi.com/exchange?q=1.0&from="+currency1+"&to="+currency2;
+
+                fetch(currency_url, requestOptions2)
+                    .then(response => response.text())
+                    .then(result => {                          
+                        let data = 
+                            '\r' + country1.name + '\t\t\t\t\t Country Name \t\t\t\t\t ' + country2.name + ' \r\n ' +
+                            country1.alpha3Code + '\t\t\t\t\t\t Alpha Code \t\t\t\t\t ' + country2.alpha3Code + ' \r\n ' +
+                            country1.capital + '\t\t\t\t\t Capital \t\t\t\t\t ' + country2.capital + ' \r\n ' +
+                            country1.region + '\t\t\t\t\t\t Continent \t\t\t\t\t\t ' + country2.region + ' \r\n ' +
+                            country1.population + '\t\t\t\t\t\t Population \t\t\t\t\t\t ' + country2.population + ' \r\n ' +
+                            currency1 + '\t\t\t\t\t\t Currency \t\t\t\t\t\t ' + currency2 + ' \r\n ' +
+                            '1' + '\t\t\t\t\t\t Currency Rate \t\t\t\t\t\t ' + result;
+                       
+                         // Convert the text to BLOB.
+                        const textToBLOB = new Blob([data], { type: 'text/plain' });
+                        const sFileName = 'countryInfo.txt';	   // The file to save the data.
+
+                        let newLink = document.createElement("a");
+                        newLink.download = sFileName;
+
+                        if (window.webkitURL != null) {
+                            newLink.href = window.webkitURL.createObjectURL(textToBLOB);
+                        }
+                        else {
+                            newLink.href = window.URL.createObjectURL(textToBLOB);
+                            newLink.style.display = "none";
+                            document.body.appendChild(newLink);
+                        }
+                        newLink.click();
+                    })
+                    .catch(error => {
+                        alert('Something went wrong, check the entries and try again');
+                    });              
+             }
+    
+        </script>
+    </body>    
+</html>
